@@ -1,5 +1,5 @@
 paddleocr>=2.6.0.3
 pillow>=9.5.0
 openpyxl
---extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cu126/
-paddlepaddle-gpu==3.0.0
+--extra-index-url https://www.paddlepaddle.org.cn/packages/stable/cpu/
+paddlepaddle-gpu==3.0.0rc1
