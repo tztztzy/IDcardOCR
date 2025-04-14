@@ -1,0 +1,179 @@
+# 模型文件（大文件）
+*.pdmodel
+*.pdiparams
+*.pdopt
+*.pdpersist
+*.onnx
+!card_correction.onnx
+!ch_PP-OCRv5_mobile_det.onnx
+!ch_PP-OCRv5_rec_mobile_infer.onnx
+!ch_ppocr_mobile_v2.0_cls_infer.onnx
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
+*.log
+
+# 虚拟环境
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Node.js / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Vite / 前端构建
+dist-ssr/
+*.local
+
+# Rust / Tauri
+/target/
+Cargo.lock
+*.rs.bk
+
+# C++ / CMake
+cpp/build/
+*.o
+*.obj
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.ilk
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.dir/
+Debug/
+Release/
+x64/
+x86/
+.vs/
+*.suo
+*.user
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# IDE - JetBrains
+.idea/
+*.iml
+*.iws
+*.ipr
+*.iws
+out/
+
+# IDE - Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# 系统和临时文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 日志和输出
+*.log
+logs/
+log/
+tmp/
+temp/
+output/
+output_*/
+results/
+result/
+*.csv
+*.xlsx
+*.xls
+
+# 测试图片输出（保留测试输入，忽略输出）
+*/result.jpg
+*/result.png
+*/visualize/
+*/output_images/
+
+# 打包发布
+*.msi
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+*.tar.gz
+*.zip

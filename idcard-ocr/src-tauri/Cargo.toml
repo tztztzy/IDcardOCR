@@ -1,0 +1,52 @@
+[package]
+name = "idcard-ocr"
+version = "0.0.2"
+description = "证件识别工具"
+authors = ["you"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "1.5.0", features = [] }
+
+[dependencies]
+tauri = { version = "1.5.0", features = ["shell-open"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Image processing
+image = "0.24"
+
+# Base64 encoding/decoding
+base64 = "0.21"
+
+# DLL loading
+libloading = "0.8"
+
+# UUID for temp file naming
+uuid = { version = "1.0", features = ["v4"] }
+
+# Regex for pattern matching
+regex = "1.8"
+
+# ONNX Runtime for OCR inference
+ort = { version = "2.0.0-rc.11", default-features = false, features = ["load-dynamic"] }
+ndarray = "0.15"
+
+# PDF generation
+printpdf = "0.5"
+
+# Excel generation
+rust_xlsxwriter = "0.73"
+
+# ZIP generation
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+
+# Date and time
+chrono = "0.4"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
