@@ -1,7 +1,0 @@
-release/
-venv/
-test_example/
-*.spec
-*.ico
-*.xslx
-paddleocr/
