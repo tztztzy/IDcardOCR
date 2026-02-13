@@ -167,27 +167,33 @@ function setupEventListeners() {
   // 文件选择
   fileInput.addEventListener("change", (e) => {
     const files = (e.target as HTMLInputElement).files;
-    if (files) {
+    if (files && files.length > 0) {
       handleFiles(Array.from(files));
+      // 重置 input 值，允许重复选择同一文件
+      (e.target as HTMLInputElement).value = "";
     }
   });
 
   // 拖拽上传
   dropZone.addEventListener("dragover", (e: DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     dropZone.classList.add("dragover");
   });
 
-  dropZone.addEventListener("dragleave", () => {
+  dropZone.addEventListener("dragleave", (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     dropZone.classList.remove("dragover");
   });
 
   dropZone.addEventListener("drop", (e: DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     dropZone.classList.remove("dragover");
 
     const files = e.dataTransfer?.files;
-    if (files) {
+    if (files && files.length > 0) {
       handleFiles(Array.from(files));
     }
   });
@@ -250,19 +256,47 @@ function resetState() {
 }
 
 async function handleFiles(files: File[]) {
-  const imageFiles = files.filter((f) => f.type.startsWith("image/"));
+  // 更健壮的文件类型检查：优先使用 type，失败时回退到扩展名检查
+  const imageFiles = files.filter((f) => {
+    // 标准 MIME 类型检查
+    if (f.type.startsWith("image/")) {
+      return true;
+    }
+    // 对于没有正确 MIME 类型的文件，检查扩展名
+    const ext = f.name.toLowerCase().split('.').pop();
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'heic', 'heif', 'tiff', 'tif'].includes(ext || '');
+  });
 
   if (imageFiles.length === 0) {
-    alert("请选择图片文件");
+    alert("请选择图片文件（支持 JPG、PNG、GIF、BMP、WebP 等格式）");
     return;
   }
 
-  selectedFiles = [...selectedFiles, ...imageFiles];
+  // 去重：过滤掉已存在的同名文件
+  const existingNames = new Set(selectedFiles.map(f => f.name));
+  const uniqueFiles = imageFiles.filter(f => !existingNames.has(f.name));
+  const duplicateCount = imageFiles.length - uniqueFiles.length;
+
+  if (duplicateCount > 0) {
+    const message = duplicateCount === 1 
+      ? `已跳过 1 个重复文件` 
+      : `已跳过 ${duplicateCount} 个重复文件`;
+    console.log(message);
+  }
+
+  if (uniqueFiles.length === 0) {
+    if (duplicateCount > 0) {
+      alert("所选文件已存在，请勿重复上传");
+    }
+    return;
+  }
+
+  selectedFiles = [...selectedFiles, ...uniqueFiles];
   updatePreview();
   updateBatchCount();
 }
 
-function updatePreview() {
+async function updatePreview() {
   previewGrid.innerHTML = "";
 
   if (selectedFiles.length === 0) {
@@ -272,26 +306,49 @@ function updatePreview() {
 
   previewSection.style.display = "block";
 
-  selectedFiles.forEach((file, index) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const div = document.createElement("div");
-      div.className = "preview-item";
-      div.innerHTML = `
-        <img src="${e.target?.result}" alt="${file.name}" />
-        <button class="remove-btn" data-index="${index}">×</button>
-        <span class="preview-name">${file.name}</span>
-      `;
-      previewGrid.appendChild(div);
-      
+  // 使用 Promise.all 确保按顺序处理文件预览
+  const previewItems = await Promise.all(
+    selectedFiles.map((file, index) => {
+      return new Promise<{ element: HTMLDivElement; index: number }>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const div = document.createElement("div");
+          div.className = "preview-item";
+          div.innerHTML = `
+            <img src="${e.target?.result}" alt="${escapeHtml(file.name)}" />
+            <button class="remove-btn" data-index="${index}">×</button>
+            <span class="preview-name">${escapeHtml(file.name)}</span>
+          `;
+          resolve({ element: div, index });
+        };
+        reader.onerror = () => {
+          // 读取失败时创建错误提示项
+          const div = document.createElement("div");
+          div.className = "preview-item preview-error";
+          div.innerHTML = `
+            <div class="preview-error-icon">!</div>
+            <button class="remove-btn" data-index="${index}">×</button>
+            <span class="preview-name">${escapeHtml(file.name)} (读取失败)</span>
+          `;
+          resolve({ element: div, index });
+        };
+        reader.readAsDataURL(file);
+      });
+    })
+  );
+
+  // 按原始顺序添加到 DOM
+  previewItems
+    .sort((a, b) => a.index - b.index)
+    .forEach(({ element, index }) => {
+      previewGrid.appendChild(element);
       // 绑定删除事件
-      div.querySelector(".remove-btn")?.addEventListener("click", (e) => {
+      element.querySelector(".remove-btn")?.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         removeFile(index);
       });
-    };
-    reader.readAsDataURL(file);
-  });
+    });
 }
 
 function removeFile(index: number) {
@@ -563,17 +620,23 @@ function setupIdCardCopyEvents() {
   const clearCopyBtn = document.getElementById("clearCopyBtn");
   const generatePdfBtn = document.getElementById("generatePdfBtn") as HTMLButtonElement;
 
-  // 点击上传
+  // 点击上传 - 使用更精确的目标检查
   frontUploadBox?.addEventListener("click", (e) => {
-    if (!(e.target as HTMLElement).classList.contains("remove-btn")) {
-      frontFileInput?.click();
+    const target = e.target as HTMLElement;
+    // 检查是否点击了删除按钮或其子元素
+    if (target.closest(".remove-btn")) {
+      return;
     }
+    frontFileInput?.click();
   });
 
   backUploadBox?.addEventListener("click", (e) => {
-    if (!(e.target as HTMLElement).classList.contains("remove-btn")) {
-      backFileInput?.click();
+    const target = e.target as HTMLElement;
+    // 检查是否点击了删除按钮或其子元素
+    if (target.closest(".remove-btn")) {
+      return;
     }
+    backFileInput?.click();
   });
 
   // 文件选择
@@ -583,6 +646,8 @@ function setupIdCardCopyEvents() {
       frontImage = files[0];
       updateIdCardPreview("front", files[0]);
       updateGenerateButton();
+      // 重置 input 值，允许重复选择同一文件
+      (e.target as HTMLInputElement).value = "";
     }
   });
 
@@ -592,23 +657,29 @@ function setupIdCardCopyEvents() {
       backImage = files[0];
       updateIdCardPreview("back", files[0]);
       updateGenerateButton();
+      // 重置 input 值，允许重复选择同一文件
+      (e.target as HTMLInputElement).value = "";
     }
   });
 
-  // 删除按钮
+  // 删除按钮 - 使用捕获阶段处理，确保优先执行
   frontRemoveBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
     frontImage = null;
     clearIdCardPreview("front");
     updateGenerateButton();
-  });
+  }, true);
 
   backRemoveBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
     backImage = null;
     clearIdCardPreview("back");
     updateGenerateButton();
-  });
+  }, true);
 
   // 清空按钮
   clearCopyBtn?.addEventListener("click", () => {
