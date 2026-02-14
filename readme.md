@@ -40,8 +40,9 @@ cd IDcardOCR
 cd card_correction/cpp
 ./build_dll.bat
 ```
-
+注意记得同意最后一步的将dll文件移动到RUST目录，否则下一步无法编译
 #### 3. 构建 Tauri 应用
+你需要找到1.23版本的onnxruntime.dll，以及opencv_world4110.dll放置于idcard-ocr/src-tauri目录下
 
 ```bash
 cd ../../idcard-ocr/src-tauri
